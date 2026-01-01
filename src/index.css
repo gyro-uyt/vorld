@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* 1. Import Fonts */
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap");
+
+/* 2. Configure Theme */
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  /* v4 includes slate-950 by default, so we don't need to define it manually! */
+}
+
+/* 3. Global Styles */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-slate-950);
+}
+
+code {
+  font-family: var(--font-mono);
+}
+
+/* 4. Custom Utilities (Scrollbar) */
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
