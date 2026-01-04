@@ -30,18 +30,26 @@ const SETUP_LAYERS = [
       {
         id: "arch-linux",
         name: "EndeavourOS",
-        desc: "Base installation",
-        cmd: "pacstrap /mnt base linux linux-firmware",
-        tags: ["OS", "Arch-based"],
+        desc: "Arch-based",
+        tags: ["OS"],
         note: "EndeavourOS uses Calamares installer usually, but this is for manual rescue.",
+        subCommands: [
+          {
+            label: "Base installation",
+            cmd: "pacstrap /mnt base linux linux-firmware",
+          },
+        ],
       },
       {
         id: "bootloader",
         name: "GRUB",
         desc: "Bootloader configuration",
-        cmd: "grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB",
         tags: ["System"],
         subCommands: [
+          {
+            label: "Installation",
+            cmd: "grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB",
+          },
           {
             label: "Generate Config",
             cmd: "grub-mkconfig -o /boot/grub/grub.cfg",
@@ -53,8 +61,13 @@ const SETUP_LAYERS = [
         id: "aur-helper",
         name: "Yay",
         desc: "AUR Helper",
-        cmd: "git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si",
         tags: ["AUR"],
+        subCommands: [
+          {
+            label: "Installation",
+            cmd: "git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si",
+          },
+        ],
       },
       {
         id: "drivers",
