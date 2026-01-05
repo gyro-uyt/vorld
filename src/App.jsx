@@ -17,6 +17,8 @@ import {
   ChevronDown,
   ChevronUp,
   Keyboard,
+  Smartphone,
+  FileText,
 } from "lucide-react";
 
 // --- Data Structure ---
@@ -278,6 +280,116 @@ const SETUP_LAYERS = [
       },
     ],
   },
+  {
+    id: "Mobile",
+    title: "Mobile: On the go",
+    icon: <Smartphone size={20} />,
+    description: "Android & Termux environment",
+    items: [
+      {
+        id: "termux",
+        name: "Termux Setup",
+        desc: "Complete environment setup",
+        note: "If asked at any step for (Y/I/N/O), generally press Enter (default)",
+        tags: ["App"],
+        subCommands: [
+          {
+            label: "Download Termux apk from the link below",
+            cmd: "https://github.com/termux/termux-app/releases/download/v0.118.3/termux-app_v0.118.3+github-debug_arm64-v8a.apk",
+          },
+          {
+            label: "Update & Upgrade",
+            cmd: "pkg update && pkg upgrade",
+          },
+          {
+            label: "Install essentials tools",
+            cmd: "pkg install clang build-essential git vim wget tar make gawk vivid",
+          },
+          {
+            label: "Get JetBrains Mono Nerd Font",
+            cmd: "mkdir -p ~/.termux && wget -O ~/.termux/font.ttf https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/JetBrainsMono/Ligatures/Regular/JetBrainsMonoNerdFont-Regular.ttf",
+          },
+          {
+            label: "Run this command to refresh Termux immediately:",
+            cmd: "termux-reload-settings",
+          },
+          {
+            label: "Install ble.sh (Bash Line Editor)",
+            cmd: "git clone --recursive https://github.com/akinomyoga/ble.sh.git && make -C ble.sh install PREFIX=~/.local",
+          },
+          {
+            label: "Install starship",
+            cmd: "pkg install starship",
+          },
+          {
+            label: "Configure .bashrc (Copy this file)",
+            code: `
+# --- 1. SETUP BLE.SH (Must be at the very top) ---
+# We source it, but with --noattach so it waits for Starship
+[[ $- == *i* ]] && source ~/ble.sh/out/ble.sh --noattach
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+#### --- BASIC SETTINGS --- ####
+stty -ixon
+HISTCONTROL=ignoredups:erasedups
+HISTSIZE=5000
+HISTFILESIZE=10000
+shopt -s histappend
+
+# Bash completion
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+fi
+
+#### --- LS COLORS --- ####
+# Keep this! Starship handles the prompt, but Vivid handles 'ls' output.
+export LS_COLORS="$(vivid generate tokyonight-moon)"
+
+alias ls='ls --color=auto'
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias grep='grep --color=auto'
+
+#### --- CUSTOM ALIASES --- ####
+alias ..='cd ..'
+alias ...='cd ../..'
+alias update='sudo pacman -Syu'
+alias cls='clear'
+
+# -----------------------------------------------------------
+#  DELETED SECTION:
+#  I removed all your manual functions:
+#  - git_branch()
+#  - python_venv()
+#  - node_version()
+#  - exit_icon()
+#  - __prompt_command()
+#
+#  Starship will now handle all of this.
+# -----------------------------------------------------------
+
+#### --- TERMINAL SETTINGS --- ####
+export TERM=xterm-256color
+
+#### --- 2. INITIALIZE STARSHIP --- ####
+# This sets the PS1 (prompt) before ble.sh takes over
+eval "$(starship init bash)"
+
+#### --- 3. ATTACH BLE.SH (Must be at the very bottom) --- ####
+[[ \${BLE_VERSION-} ]] && ble-attach
+`,
+          },
+          {
+            label: "Apply different built-in starship themes",
+            cmd: "starship preset tokyonight -o ~/.config/starship.toml",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 // --- Components ---
@@ -322,6 +434,65 @@ const CopyButton = ({ text }) => {
     >
       {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
     </button>
+  );
+};
+
+// --- Helper Component for Collapsible Code ---
+const CodeBlock = ({ code }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Count lines to decide if we need to collapse
+  const lineCount = code.trim().split("\n").length;
+  const isLong = lineCount > 6; // Limit: 6 lines
+
+  return (
+    <div className="mt-1 relative group/block">
+      {/* Container */}
+      <div
+        className={`
+          bg-slate-950 rounded-lg border border-slate-800 relative overflow-hidden transition-all duration-300
+          ${
+            isExpanded || !isLong ? "max-h-full" : "max-h-32"
+          } /* 32 = approx 6-7 lines */
+        `}
+      >
+        {/* Copy Button (Fixed Top Right) */}
+        <div className="absolute top-0 right-0 p-2 z-10 bg-slate-950/50 backdrop-blur opacity-0 group-hover/block:opacity-100 transition-opacity">
+          <CopyButton text={code.trim()} />
+        </div>
+
+        {/* Decorative Line */}
+        <div className="absolute top-0 left-0 w-0.5 h-full bg-amber-500/50"></div>
+
+        {/* Code Content */}
+        <pre className="p-4 text-xs font-mono text-amber-100/80 leading-relaxed overflow-x-auto whitespace-pre font-variant-ligatures-none">
+          {code.trim()}
+        </pre>
+
+        {/* Fade Out Overlay (Only when collapsed) */}
+        {!isExpanded && isLong && (
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-transparent"></div>
+        )}
+      </div>
+
+      {/* Toggle Button (Only if long) */}
+      {isLong && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-center gap-2 py-1.5 mt-1 text-[10px] uppercase font-bold tracking-wider text-slate-500 hover:text-cyan-400 hover:bg-slate-900/50 rounded transition-colors"
+        >
+          {isExpanded ? (
+            <>
+              <ChevronUp size={12} /> Collapse Code
+            </>
+          ) : (
+            <>
+              <ChevronDown size={12} /> View Full Config ({lineCount} lines)
+            </>
+          )}
+        </button>
+      )}
+    </div>
   );
 };
 
@@ -649,23 +820,38 @@ export default function ArchSetupHub() {
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Sub Commands */}
+                        {/* Sub Commands / Steps Section */}
+                        {/* Sub Commands */}
                         {item.subCommands && (
-                          <div>
+                          <div className={item.keybinds ? "" : "col-span-2"}>
                             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                              <Command size={14} /> Useful Commands
+                              <Command size={14} /> Installation Steps
                             </h4>
-                            <div className="space-y-2">
+                            <div className="space-y-4">
                               {item.subCommands.map((sub, idx) => (
-                                <div key={idx} className="flex flex-col gap-1">
-                                  <span className="text-xs text-slate-400 ml-1">
+                                <div
+                                  key={idx}
+                                  className="flex flex-col gap-1.5"
+                                >
+                                  <span className="text-xs text-slate-400 ml-1 font-medium">
                                     {sub.label}
                                   </span>
-                                  <div className="flex items-center bg-slate-950 rounded border border-slate-800/60 overflow-hidden group/sub">
-                                    <code className="flex-1 px-3 py-1.5 text-xs font-mono text-cyan-200/80 overflow-x-auto whitespace-nowrap scrollbar-hide">
-                                      {sub.cmd}
-                                    </code>
-                                    <CopyButton text={sub.cmd} />
-                                  </div>
+
+                                  {/* LOGIC: Is this a Code Block or a Command? */}
+                                  {sub.code ? (
+                                    // USE THE NEW COMPONENT HERE
+                                    <CodeBlock code={sub.code} />
+                                  ) : (
+                                    // RENDER SINGLE COMMAND
+                                    <div className="flex items-center bg-slate-950 rounded border border-slate-800/60 overflow-hidden group/sub">
+                                      <code className="flex-1 px-3 py-2 text-xs font-mono text-cyan-200/80 overflow-x-auto whitespace-nowrap scrollbar-hide">
+                                        {sub.cmd}
+                                      </code>
+                                      <div className="border-l border-slate-800/60">
+                                        <CopyButton text={sub.cmd} />
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
