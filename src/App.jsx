@@ -72,6 +72,57 @@ const SETUP_LAYERS = [
         ],
       },
       {
+        id: "audio-manager",
+        name: "PipeWire",
+        desc: "Manges the audio flow",
+        tags: ["Audio"],
+        note: "PipeWire is new-gen replacement for all PulseAudio, JACK & ALSA.",
+        subCommands: [
+          {
+            label: "Installation",
+            code: `
+sudo pacman -Rns pulseaudio pulseaudio-alsa pulseaudio-bluetooth
+
+sudo pacman -S pipewire pipewire-audio pipewire-alsa pipewire-pulse pipewire-jack pipewire-bluetooth wireplumber
+
+# 1. Reload systemd to see the new unit files
+systemctl --user daemon-reload
+# 2. Enable and Start the services immediately
+systemctl --user enable --now pipewire pipewire-pulse wireplumber
+
+# To verify everything is 100% correct, Look for: Server Name: PulseAudio (on PipeWire 1.X.X)
+pactl info
+
+# Optional but Recommended Tools
+
+# Pavucontrol (The Volume Mixer): Essential for changing output devices per app.
+sudo pacman -S pavucontrol
+
+# Helvum (The Patchbay): This shows you a visual map of your audio. You can physically drag a line from "Firefox" to "Cava" or "Headphones." It helps visualize how PipeWire works.
+sudo pacman -S helvum
+            `,
+          },
+          {
+            label: "Broken/Streaming paused",
+            code: `
+sudo pacman -S pipewire pipewire-pulse wireplumber
+
+# 1. Stop and disable the old PulseAudio server
+systemctl --user stop pulseaudio.socket pulseaudio.service
+systemctl --user disable pulseaudio.socket pulseaudio.service
+
+# 2. Start and enable the new PipeWire server
+systemctl --user enable --now pipewire pipewire-pulse wireplumber
+
+# Success: It should now say: Server Name: PulseAudio (on PipeWire X.X.X)
+# Failure: If it still says just pulseaudio, reboot your computer and check again.
+LANG=C pactl info | grep "Server Name"
+
+            `,
+          },
+        ],
+      },
+      {
         id: "drivers",
         name: "Nvidia Drivers",
         desc: "Proprietary drivers",
